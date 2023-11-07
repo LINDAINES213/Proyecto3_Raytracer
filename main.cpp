@@ -24,8 +24,8 @@ const float BIAS = 0.0001f;
 
 SDL_Renderer* renderer;
 std::vector<Object*> objects;
-Light light(glm::vec3(-1.0, 0, 10), 1.5f, Color(255, 255, 255));
-Camera camera(glm::vec3(0.0, 0.0, 5.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), 10.0f);
+alLight light(glm::vec3(-20.0, 20.0, 20.0), 1.5f, Color(255, 255, 255));
+Camera camera(glm::vec3(0.0, 0.0, 10.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), 10.0f);
 
 
 void point(glm::vec2 position, Color color) {
@@ -68,16 +68,16 @@ Color castRay(const glm::vec3& rayOrigin, const glm::vec3& rayDirection, const s
 
     glm::vec3 lightDir = glm::normalize(light.position - intersect.point);
     glm::vec3 viewDir = glm::normalize(rayOrigin - intersect.point);
-    glm::vec3 reflectDir = glm::reflect(-lightDir, intersect.normal); 
+    glm::vec3 reflectDir = glm::reflect(-lightDir, intersect.normal);
 
     float shadowIntensity = castShadow(intersect.point, lightDir, hitObject);
 
     float diffuseLightIntensity = std::max(0.0f, glm::dot(intersect.normal, lightDir));
     float specReflection = glm::dot(viewDir, reflectDir);
-    
+
     Material mat = hitObject->material;
 
-    float specLightIntensity = std::pow(std::max(0.0f, glm::dot(viewDir, reflectDir)), mat.specularCoefficient);
+    float specLightIntensity = std::pow(std::max(0.0f, specReflection), mat.specularCoefficient);
 
 
     Color reflectedColor(0.0f, 0.0f, 0.0f);
@@ -103,13 +103,23 @@ Color castRay(const glm::vec3& rayOrigin, const glm::vec3& rayDirection, const s
 
 void setUp() {
     Material rubber = {
-            Color(80, 0, 0),   // diffuse
+            Color(0, 0, 0),   // diffuse
             0.9,
             0.1,
             10.0f,
             0.0f,
             0.0f
     };
+
+    Material redMat = {
+            Color(201, 41, 41),  // Color rojo mate (#C92929 en RGB)
+            0.9,                // Coeficiente de difusión
+            0.1,                // Coeficiente de especularidad
+            10.0f,              // Exponente de especularidad
+            0.0f,               // Coeficiente de reflectividad
+            0.0f                // Coeficiente de transparencia
+    };
+
 
     Material ivory = {
             Color(100, 100, 80),
@@ -130,7 +140,7 @@ void setUp() {
     };
 
     Material glass = {
-            Color(255, 255, 255),
+            Color(201, 41, 41),
             0.0f,
             10.0f,
             1425.0f,
@@ -138,10 +148,67 @@ void setUp() {
             1.0f,
     };
 
-    objects.push_back(new Cube(glm::vec3(-1.0f, -1.0f, -1.0f), glm::vec3(1.0f, 1.0f, 1.0f), rubber));
-    objects.push_back(new Cube(glm::vec3(-3.0f, -1.0f, -5.0f), glm::vec3(-1.0f, 1.0f, -3.0f), ivory));
-    objects.push_back(new Cube(glm::vec3(1.0f, -1.0f, -5.0f), glm::vec3(3.0f, 1.0f, -3.0f), mirror));
-    objects.push_back(new Cube(glm::vec3(-1.0f, -3.0f, -4.0f), glm::vec3(1.0f, -1.0f, -2.0f), glass));
+    // Primer cubo Llanta
+    objects.push_back(new Cube(glm::vec3(-2.5f, -1.0f, -2.5f), glm::vec3(-0.5f, 1.0f, -0.5f), redMat));
+
+    // Segundo cubo al lado del primero
+    objects.push_back(new Cube(glm::vec3(-0.5f, -1.0f, -2.5f), glm::vec3(2.5f, 1.0f, -0.5f), glass));
+
+    // Tercer cubo al lado de los dos anteriores LLanta
+    objects.push_back(new Cube(glm::vec3(2.5f, -1.0f, -2.5f), glm::vec3(4.5f, 1.0f, -0.5f), redMat));
+
+    // Cuarto cubo encima del segundo
+    //objects.push_back(new Cube(glm::vec3(-0.5f, 1.0f, -2.5f), glm::vec3(2.0f, 3.0f, -0.5f), glass));
+
+    // Cuarto cubo enfrente del primero Aleron
+    objects.push_back(new Cube(glm::vec3(-3.0f, -1.0f, 2.0f), glm::vec3(-0.5f, -0.5f, 0.5f), glass));
+    objects.push_back(new Cube(glm::vec3(-3.0f, -1.0f, 2.0f), glm::vec3(-2.7f, 0.0f, 0.5f), glass));
+
+
+    // Quinto cubo enfrente del segundo entre aleron
+    objects.push_back(new Cube(glm::vec3(-0.5f, -1.0f, 2.0f), glm::vec3(2.5f, 1.0f, -0.5f), glass));
+
+    // Sexto cubo enfrente del tercero Aleron
+    objects.push_back(new Cube(glm::vec3(2.5f, -1.0f, 2.0f), glm::vec3(5.0f, -0.5f, 0.5f), glass));
+    objects.push_back(new Cube(glm::vec3(4.7f, -1.0f, 2.0f), glm::vec3(5.0f, 0.0f, 0.5f), glass));
+
+
+
+    // Séptimo cubo detrás del segundo
+    objects.push_back(new Cube(glm::vec3(-0.5f, -1.0f, -4.5f), glm::vec3(2.5f, 1.0f, -2.5f), glass));
+    //Octavo detras del septimo
+    objects.push_back(new Cube(glm::vec3(-0.5f, -1.0f, -6.5f), glm::vec3(2.5f, 1.0f, -3.0f), glass));
+    //Lados del octavo
+    objects.push_back(new Cube(glm::vec3(-1.5f, -1.0f, -6.5f), glm::vec3(-0.5f, 1.0f, -3.0f), glass));
+    objects.push_back(new Cube(glm::vec3(3.5f, -1.0f, -6.5f), glm::vec3(2.5f, 1.0f, -3.0f), glass));
+
+    //Lados del asiento
+    objects.push_back(new Cube(glm::vec3(-1.5f, -1.0f, -8.5f), glm::vec3(-0.5f, 1.0f, -6.5f), glass));
+    objects.push_back(new Cube(glm::vec3(3.5f, -1.0f, -8.5f), glm::vec3(2.5f, 1.0f, -6.5f), glass));
+    //Piloto
+    objects.push_back(new Cube(glm::vec3(0.5f, -1.0f, -8.0f), glm::vec3(1.5f, 1.5f, -7.0f), rubber));
+    //Noveno detras de octavo
+    objects.push_back(new Cube(glm::vec3(-0.5f, -1.0f, -10.5f), glm::vec3(2.5f, 1.0f, -8.5f), glass));
+    //Lados del noveno
+    objects.push_back(new Cube(glm::vec3(-1.5f, -1.0f, -10.0f), glm::vec3(-0.5f, 1.0f, -8.5f), glass));
+    objects.push_back(new Cube(glm::vec3(3.5f, -1.0f, -10.0f), glm::vec3(2.5f, 1.0f, -8.5f), glass));
+    //Decimo detras de noveno entre llantas
+    objects.push_back(new Cube(glm::vec3(-0.5f, -1.0f, -12.5f), glm::vec3(2.5f, 1.0f, -10.5f), glass));
+    //Lantas Traseras
+    objects.push_back(new Cube(glm::vec3(-2.5f, -1.0f, -12.5f), glm::vec3(-0.5f, 1.0f, -10.5f), rubber));
+    objects.push_back(new Cube(glm::vec3(2.5f, -1.0f, -12.5f), glm::vec3(4.5f, 1.0f, -10.5f), rubber));
+    //Onceavo detras de decimo
+    objects.push_back(new Cube(glm::vec3(-0.5f, -1.0f, -13.5f), glm::vec3(2.5f, 1.0f, -11.5f), glass));
+    //Soporte DRS encima de onceavo
+    objects.push_back(new Cube(glm::vec3(-0.0f, -1.0f, -13.5f), glm::vec3(0.5f, 1.5f, -13.0f), rubber));
+    objects.push_back(new Cube(glm::vec3(1.5f, -1.0f, -13.5f), glm::vec3(2.0f, 1.5f, -13.0f), rubber));
+    //DRS
+    objects.push_back(new Cube(glm::vec3(-1.5f, 1.5f, -14.5f), glm::vec3(3.5f, 1.8f, -13.0f), rubber));
+
+
+
+
+
 }
 
 
@@ -239,6 +306,12 @@ int main(int argc, char* argv[]) {
                     case SDLK_RIGHT:
                         print("right");
                         camera.rotate(1.0f, 0.0f);
+                        break;
+                    case SDLK_w:
+                        camera.moveVertical(1.0f);
+                        break;
+                    case SDLK_s:
+                        camera.moveVertical(-1.0f);
                         break;
                  }
             }

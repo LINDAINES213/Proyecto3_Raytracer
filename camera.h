@@ -3,16 +3,19 @@
 
 class Camera {
 public:
-  glm::vec3 position;
-  glm::vec3 target;
-  glm::vec3 up;
+    glm::vec3 position;
+    glm::vec3 target;
+    glm::vec3 up;
 
-  float rotationSpeed;
+    float rotationSpeed;
 
-  Camera(glm::vec3 position, glm::vec3 target, glm::vec3 up, float rotationSpeed);
+    Camera(glm::vec3 position, glm::vec3 target, glm::vec3 up, float rotationSpeed);
 
-  void rotate(float deltaX, float deltaY);
+    void rotate(float deltaX, float deltaY);
 
-  void move(float deltaZ);
+    void move(float deltaZ);
+
+    void moveVertical(float deltaVertical);  // Nueva función para movimiento vertical
 };
+
 

@@ -1,11 +1,8 @@
 #pragma once
 
 #include <glm/glm.hpp>
-#include "object.h"
 #include "material.h"
 #include "intersect.h"
-
-#pragma once
 #include "object.h"
 
 class Cube : public Object {

@@ -17,3 +17,9 @@ void Camera::move(float deltaZ) {
   glm::vec3 dir = glm::normalize(target - position);
   position += dir * deltaZ;
 }
+
+void Camera::moveVertical(float deltaVertical) {
+    glm::vec3 verticalDir = glm::normalize(up);
+    position += verticalDir * deltaVertical;
+}
+

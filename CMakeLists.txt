@@ -6,7 +6,8 @@ set(CMAKE_CXX_STANDARD 23)
 add_executable(Proyecto3_Raytracer main.cpp
         cube.cpp
         include/print.h
-        camera.cpp)
+        camera.cpp
+        skybox.cpp)
 
 if(NOT PNG AND WIN32 AND NOT MSVC)
     set(PNG_LIBRARY "C:/Program Files(x86)/libpng")

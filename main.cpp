@@ -15,6 +15,7 @@
 #include "cube.h"
 #include "light.h"
 #include "camera.h"
+#include "skybox.h"
 
 const int SCREEN_WIDTH = 800;
 const int SCREEN_HEIGHT = 600;
@@ -24,9 +25,9 @@ const float BIAS = 0.0001f;
 
 SDL_Renderer* renderer;
 std::vector<Object*> objects;
-alLight light(glm::vec3(-20.0, 20.0, 20.0), 1.5f, Color(255, 255, 255));
-Camera camera(glm::vec3(0.0, 0.0, 10.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), 10.0f);
-
+Light light(glm::vec3(-100.0f, -100.0f, -100.0f), 10.0f, Color(200, 0, 0));
+Camera camera(glm::vec3(0.0f, 10.0f, 15.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 8.0f, 0.0f), 10.0f);
+Skybox skybox("../assets/circuito.png");
 
 void point(glm::vec2 position, Color color) {
     SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
@@ -40,7 +41,12 @@ float castShadow(const glm::vec3& shadowOrigin, const glm::vec3& lightDir, Objec
             if (shadowIntersect.isIntersecting && shadowIntersect.dist > 0) {
                 float shadowRatio = shadowIntersect.dist / glm::length(light.position - shadowOrigin);
                 shadowRatio = glm::min(1.0f, shadowRatio);
-                return 1.0f - shadowRatio;
+
+                // Check if the shadow point is in the same direction as the light
+                float dotProduct = glm::dot(shadowIntersect.normal, -lightDir);
+                if (dotProduct > 0.0f) {
+                    return 1.0f - shadowRatio;
+                }
             }
         }
     }
@@ -62,7 +68,7 @@ Color castRay(const glm::vec3& rayOrigin, const glm::vec3& rayDirection, const s
     }
 
     if (!intersect.isIntersecting || recursion == MAX_RECURSION) {
-        return Color(173, 216, 230);
+        return skybox.getColor(rayDirection);
     }
 
 
@@ -77,20 +83,20 @@ Color castRay(const glm::vec3& rayOrigin, const glm::vec3& rayDirection, const s
 
     Material mat = hitObject->material;
 
-    float specLightIntensity = std::pow(std::max(0.0f, specReflection), mat.specularCoefficient);
+    float specLightIntensity = std::pow(std::max(0.0f, glm::dot(viewDir, reflectDir)), mat.specularCoefficient);
 
 
     Color reflectedColor(0.0f, 0.0f, 0.0f);
     if (mat.reflectivity > 0) {
         glm::vec3 origin = intersect.point + intersect.normal * BIAS;
-        reflectedColor = castRay(origin, reflectDir, recursion + 1); 
+        reflectedColor = castRay(origin, reflectDir, recursion + 1);
     }
 
     Color refractedColor(0.0f, 0.0f, 0.0f);
     if (mat.transparency > 0) {
         glm::vec3 origin = intersect.point - intersect.normal * BIAS;
         glm::vec3 refractDir = glm::refract(rayDirection, intersect.normal, mat.refractionIndex);
-        refractedColor = castRay(origin, refractDir, recursion + 1); 
+        refractedColor = castRay(origin, refractDir, recursion + 1);
     }
 
 
@@ -102,32 +108,24 @@ Color castRay(const glm::vec3& rayOrigin, const glm::vec3& rayDirection, const s
 }
 
 void setUp() {
-    Material rubber = {
-            Color(0, 0, 0),   // diffuse
-            0.9,
-            0.1,
-            10.0f,
-            0.0f,
-            0.0f
-    };
 
     Material redMat = {
-            Color(201, 41, 41),  // Color rojo mate (#C92929 en RGB)
-            0.9,                // Coeficiente de difusión
-            0.1,                // Coeficiente de especularidad
-            10.0f,              // Exponente de especularidad
-            0.0f,               // Coeficiente de reflectividad
-            0.0f                // Coeficiente de transparencia
+            Color(200, 0, 0),
+            0.9f,
+            0.9f,
+            2.0f,
+            0.4f,
+            -1.0f,
     };
 
 
     Material ivory = {
             Color(100, 100, 80),
-            0.5,
-            0.5,
-            50.0f,
-            0.4f,
-            0.0f
+            0.9f,
+            0.5f,
+            2.0f,
+            0.0f,
+            0.0f,
     };
 
     Material mirror = {
@@ -148,67 +146,68 @@ void setUp() {
             1.0f,
     };
 
+    Material negro = {
+            Color(0, 0, 0),
+            0.9f,
+            0.0f,
+            2.0f,
+            0.0f,
+            0.0f,
+    };
+
     // Primer cubo Llanta
-    objects.push_back(new Cube(glm::vec3(-2.5f, -1.0f, -2.5f), glm::vec3(-0.5f, 1.0f, -0.5f), redMat));
+    objects.push_back(new Cube(glm::vec3(-2.5f, -1.0f, -2.5f), glm::vec3(-0.5f, 1.0f, -0.5f), negro));
 
     // Segundo cubo al lado del primero
-    objects.push_back(new Cube(glm::vec3(-0.5f, -1.0f, -2.5f), glm::vec3(2.5f, 1.0f, -0.5f), glass));
+    objects.push_back(new Cube(glm::vec3(-0.5f, -1.0f, -2.5f), glm::vec3(2.5f, 1.0f, -0.5f), redMat));
 
     // Tercer cubo al lado de los dos anteriores LLanta
-    objects.push_back(new Cube(glm::vec3(2.5f, -1.0f, -2.5f), glm::vec3(4.5f, 1.0f, -0.5f), redMat));
+    objects.push_back(new Cube(glm::vec3(2.5f, -1.0f, -2.5f), glm::vec3(4.5f, 1.0f, -0.5f), negro));
 
     // Cuarto cubo encima del segundo
     //objects.push_back(new Cube(glm::vec3(-0.5f, 1.0f, -2.5f), glm::vec3(2.0f, 3.0f, -0.5f), glass));
 
     // Cuarto cubo enfrente del primero Aleron
-    objects.push_back(new Cube(glm::vec3(-3.0f, -1.0f, 2.0f), glm::vec3(-0.5f, -0.5f, 0.5f), glass));
-    objects.push_back(new Cube(glm::vec3(-3.0f, -1.0f, 2.0f), glm::vec3(-2.7f, 0.0f, 0.5f), glass));
-
+    objects.push_back(new Cube(glm::vec3(-3.0f, -1.0f, 2.0f), glm::vec3(-0.5f, -0.5f, 0.5f), redMat));
+    objects.push_back(new Cube(glm::vec3(-3.0f, -1.0f, 2.0f), glm::vec3(-2.7f, 0.0f, 0.5f), redMat));
 
     // Quinto cubo enfrente del segundo entre aleron
-    objects.push_back(new Cube(glm::vec3(-0.5f, -1.0f, 2.0f), glm::vec3(2.5f, 1.0f, -0.5f), glass));
+    objects.push_back(new Cube(glm::vec3(-0.5f, -1.0f, 2.0f), glm::vec3(2.5f, 1.0f, -0.5f), redMat));
 
     // Sexto cubo enfrente del tercero Aleron
-    objects.push_back(new Cube(glm::vec3(2.5f, -1.0f, 2.0f), glm::vec3(5.0f, -0.5f, 0.5f), glass));
-    objects.push_back(new Cube(glm::vec3(4.7f, -1.0f, 2.0f), glm::vec3(5.0f, 0.0f, 0.5f), glass));
-
-
+    objects.push_back(new Cube(glm::vec3(2.5f, -1.0f, 2.0f), glm::vec3(5.0f, -0.5f, 0.5f), redMat));
+    objects.push_back(new Cube(glm::vec3(4.7f, -1.0f, 2.0f), glm::vec3(5.0f, 0.0f, 0.5f), redMat));
 
     // Séptimo cubo detrás del segundo
-    objects.push_back(new Cube(glm::vec3(-0.5f, -1.0f, -4.5f), glm::vec3(2.5f, 1.0f, -2.5f), glass));
+    objects.push_back(new Cube(glm::vec3(-0.5f, -1.0f, -4.5f), glm::vec3(2.5f, 1.0f, -2.5f), redMat));
     //Octavo detras del septimo
-    objects.push_back(new Cube(glm::vec3(-0.5f, -1.0f, -6.5f), glm::vec3(2.5f, 1.0f, -3.0f), glass));
+    objects.push_back(new Cube(glm::vec3(-0.5f, -1.0f, -6.5f), glm::vec3(2.5f, 1.0f, -3.0f), redMat));
     //Lados del octavo
-    objects.push_back(new Cube(glm::vec3(-1.5f, -1.0f, -6.5f), glm::vec3(-0.5f, 1.0f, -3.0f), glass));
-    objects.push_back(new Cube(glm::vec3(3.5f, -1.0f, -6.5f), glm::vec3(2.5f, 1.0f, -3.0f), glass));
+    objects.push_back(new Cube(glm::vec3(-1.5f, -1.0f, -6.5f), glm::vec3(-0.5f, 1.0f, -3.0f), redMat));
+    objects.push_back(new Cube(glm::vec3(3.5f, -1.0f, -6.5f), glm::vec3(2.5f, 1.0f, -3.0f), redMat));
 
     //Lados del asiento
-    objects.push_back(new Cube(glm::vec3(-1.5f, -1.0f, -8.5f), glm::vec3(-0.5f, 1.0f, -6.5f), glass));
-    objects.push_back(new Cube(glm::vec3(3.5f, -1.0f, -8.5f), glm::vec3(2.5f, 1.0f, -6.5f), glass));
+    objects.push_back(new Cube(glm::vec3(-1.5f, -1.0f, -8.5f), glm::vec3(-0.5f, 1.0f, -6.5f), redMat));
+    objects.push_back(new Cube(glm::vec3(3.5f, -1.0f, -8.5f), glm::vec3(2.5f, 1.0f, -6.5f), redMat));
     //Piloto
-    objects.push_back(new Cube(glm::vec3(0.5f, -1.0f, -8.0f), glm::vec3(1.5f, 1.5f, -7.0f), rubber));
+    objects.push_back(new Cube(glm::vec3(0.5f, -1.0f, -8.0f), glm::vec3(1.5f, 1.5f, -7.0f), ivory));
     //Noveno detras de octavo
-    objects.push_back(new Cube(glm::vec3(-0.5f, -1.0f, -10.5f), glm::vec3(2.5f, 1.0f, -8.5f), glass));
+    objects.push_back(new Cube(glm::vec3(-0.5f, -1.0f, -10.5f), glm::vec3(2.5f, 1.0f, -8.5f), redMat));
     //Lados del noveno
-    objects.push_back(new Cube(glm::vec3(-1.5f, -1.0f, -10.0f), glm::vec3(-0.5f, 1.0f, -8.5f), glass));
-    objects.push_back(new Cube(glm::vec3(3.5f, -1.0f, -10.0f), glm::vec3(2.5f, 1.0f, -8.5f), glass));
+    objects.push_back(new Cube(glm::vec3(-1.5f, -1.0f, -10.0f), glm::vec3(-0.5f, 1.0f, -8.5f), redMat));
+    objects.push_back(new Cube(glm::vec3(3.5f, -1.0f, -10.0f), glm::vec3(2.5f, 1.0f, -8.5f), redMat));
     //Decimo detras de noveno entre llantas
-    objects.push_back(new Cube(glm::vec3(-0.5f, -1.0f, -12.5f), glm::vec3(2.5f, 1.0f, -10.5f), glass));
+    objects.push_back(new Cube(glm::vec3(-0.5f, -1.0f, -12.5f), glm::vec3(2.5f, 1.0f, -10.5f), redMat));
     //Lantas Traseras
-    objects.push_back(new Cube(glm::vec3(-2.5f, -1.0f, -12.5f), glm::vec3(-0.5f, 1.0f, -10.5f), rubber));
-    objects.push_back(new Cube(glm::vec3(2.5f, -1.0f, -12.5f), glm::vec3(4.5f, 1.0f, -10.5f), rubber));
+    objects.push_back(new Cube(glm::vec3(-2.5f, -1.0f, -12.5f), glm::vec3(-0.5f, 1.0f, -10.5f), negro));
+    objects.push_back(new Cube(glm::vec3(2.5f, -1.0f, -12.5f), glm::vec3(4.5f, 1.0f, -10.5f), negro));
     //Onceavo detras de decimo
-    objects.push_back(new Cube(glm::vec3(-0.5f, -1.0f, -13.5f), glm::vec3(2.5f, 1.0f, -11.5f), glass));
+    objects.push_back(new Cube(glm::vec3(-0.5f, -1.0f, -13.5f), glm::vec3(2.5f, 1.0f, -11.5f), redMat));
     //Soporte DRS encima de onceavo
-    objects.push_back(new Cube(glm::vec3(-0.0f, -1.0f, -13.5f), glm::vec3(0.5f, 1.5f, -13.0f), rubber));
-    objects.push_back(new Cube(glm::vec3(1.5f, -1.0f, -13.5f), glm::vec3(2.0f, 1.5f, -13.0f), rubber));
+    objects.push_back(new Cube(glm::vec3(-0.0f, -1.0f, -13.5f), glm::vec3(0.5f, 1.5f, -13.0f), negro));
+    objects.push_back(new Cube(glm::vec3(1.5f, -1.0f, -13.5f), glm::vec3(2.0f, 1.5f, -13.0f), negro));
     //DRS
-    objects.push_back(new Cube(glm::vec3(-1.5f, 1.5f, -14.5f), glm::vec3(3.5f, 1.8f, -13.0f), rubber));
-
-
-
-
-
+    objects.push_back(new Cube(glm::vec3(-1.5f, 1.5f, -14.5f), glm::vec3(3.5f, 1.8f, -13.0f), redMat));
 }
 
 
@@ -222,14 +221,11 @@ void render() {
                 continue;
             }
             */
-
-
             float screenX = (2.0f * (x + 0.5f)) / SCREEN_WIDTH - 1.0f;
             float screenY = -(2.0f * (y + 0.5f)) / SCREEN_HEIGHT + 1.0f;
             screenX *= ASPECT_RATIO;
             screenX *= tan(fov/2.0f);
             screenY *= tan(fov/2.0f);
-
 
             glm::vec3 cameraDir = glm::normalize(camera.target - camera.position);
 
@@ -315,8 +311,6 @@ int main(int argc, char* argv[]) {
                         break;
                  }
             }
-
-
         }
 
         // Clear the screen
@@ -343,6 +337,5 @@ int main(int argc, char* argv[]) {
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
-
     return 0;
 }

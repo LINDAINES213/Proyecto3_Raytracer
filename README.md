@@ -1,5 +1,5 @@
 # Proyecto 3 - Gráficas por Computadora
-## Raytracer | Diorama Carro Fórmula 1 🏁{
+## Raytracer | Diorama Carro Fórmula 1 🏁
 Para este proyecto teníamos que hacer un diorama utilizando técnicas de raytracer. El diorama se realizó a base de cubos, los cuales tienen distintos materiales, los cuales se hicieron distintos para cada parte del diorama como el carro, las llantas, los tubos de la bandera de meta, etc. Con las teclas se pueden realizar distintos movimientos para visualizar el diorama como:<br><br>
 
 - `↑`: Para alejarse<br>
@@ -22,6 +22,6 @@ También como se puede apreciar en el video de demostración se implemento un sk
 
 ## Demo Proyecto
 Acá se encuentra el link a un video donde se ve la demostración del funcionamiento del raytracer.<br><br>
-Link 1: https://clipchamp.com/watch/CKAjCe7IR1X<br>
+Link 1: https://clipchamp.com/watch/CKAjCe7IR1X<br><br>
 Link 2: https://youtu.be/OJQSQbagn0o<br><br>
 ![image](https://github.com/LINDAINES213/Proyecto3_Raytracer/assets/77686175/79d81d75-4cba-4458-9895-173593a005ae)

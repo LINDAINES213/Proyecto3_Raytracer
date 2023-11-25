@@ -26,7 +26,7 @@ const float BIAS = 0.0001f;
 SDL_Renderer* renderer;
 std::vector<Object*> objects;
 Light light(glm::vec3(-100.0f, -100.0f, -100.0f), 10.0f, Color(200, 0, 0));
-Camera camera(glm::vec3(0.0f, 10.0f, 15.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 8.0f, 0.0f), 10.0f);
+Camera camera(glm::vec3(0.0f, 10.0f, 20.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 10.0f, 0.0f), 10.0f);
 Skybox skybox("../assets/circuito.png");
 
 void point(glm::vec2 position, Color color) {
@@ -100,7 +100,6 @@ Color castRay(const glm::vec3& rayOrigin, const glm::vec3& rayDirection, const s
     }
 
 
-
     Color diffuseLight = mat.diffuse * light.intensity * diffuseLightIntensity * mat.albedo * shadowIntensity;
     Color specularLight = light.color * light.intensity * specLightIntensity * mat.specularAlbedo * shadowIntensity;
     Color color = (diffuseLight + specularLight) * (1.0f - mat.reflectivity - mat.transparency) + reflectedColor * mat.reflectivity + refractedColor * mat.transparency;
@@ -119,11 +118,57 @@ void setUp() {
     };
 
 
-    Material ivory = {
+    Material traje = {
             Color(100, 100, 80),
             0.9f,
             0.5f,
             2.0f,
+            0.0f,
+            0.0f,
+    };
+
+    Material metalMaterial = {
+            Color(192, 192, 192),   // Color difuso gris para simular metal
+            0.8f,                   // Coeficiente albedo
+            0.8f,                   // Coeficiente de albedo especular
+            30.0f,                  // Coeficiente especular
+            0.5f,                   // Reflectividad (puedes ajustar este valor)
+            -1.0f,                   // Transparencia
+    };
+
+    Material bandera = {
+            Color(255, 255, 255),
+            0.7f,
+            0.7f,
+            100.0f,
+            0.3f,
+            -1.0f,
+    };
+
+    Material banderaNegra = {
+            Color(0, 0, 0),
+            0.9f,
+            0.0f,
+            2.0f,
+            0.0f,
+            -1.0f,
+    };
+
+
+    Material llantas = {
+            Color(0, 0, 0),
+            0.9f,
+            0.0f,
+            2.0f,
+            0.0f,
+            0.0f,
+    };
+
+    Material estructura = {
+            Color(0, 0, 0),
+            0.8f,
+            0.0f,
+            3.0f,
             0.0f,
             0.0f,
     };
@@ -146,23 +191,14 @@ void setUp() {
             1.0f,
     };
 
-    Material negro = {
-            Color(0, 0, 0),
-            0.9f,
-            0.0f,
-            2.0f,
-            0.0f,
-            0.0f,
-    };
-
     // Primer cubo Llanta
-    objects.push_back(new Cube(glm::vec3(-2.5f, -1.0f, -2.5f), glm::vec3(-0.5f, 1.0f, -0.5f), negro));
+    objects.push_back(new Cube(glm::vec3(-2.5f, -1.0f, -2.5f), glm::vec3(-0.5f, 1.0f, -0.5f), llantas));
 
     // Segundo cubo al lado del primero
     objects.push_back(new Cube(glm::vec3(-0.5f, -1.0f, -2.5f), glm::vec3(2.5f, 1.0f, -0.5f), redMat));
 
     // Tercer cubo al lado de los dos anteriores LLanta
-    objects.push_back(new Cube(glm::vec3(2.5f, -1.0f, -2.5f), glm::vec3(4.5f, 1.0f, -0.5f), negro));
+    objects.push_back(new Cube(glm::vec3(2.5f, -1.0f, -2.5f), glm::vec3(4.5f, 1.0f, -0.5f), llantas));
 
     // Cuarto cubo encima del segundo
     //objects.push_back(new Cube(glm::vec3(-0.5f, 1.0f, -2.5f), glm::vec3(2.0f, 3.0f, -0.5f), glass));
@@ -190,7 +226,16 @@ void setUp() {
     objects.push_back(new Cube(glm::vec3(-1.5f, -1.0f, -8.5f), glm::vec3(-0.5f, 1.0f, -6.5f), redMat));
     objects.push_back(new Cube(glm::vec3(3.5f, -1.0f, -8.5f), glm::vec3(2.5f, 1.0f, -6.5f), redMat));
     //Piloto
-    objects.push_back(new Cube(glm::vec3(0.5f, -1.0f, -8.0f), glm::vec3(1.5f, 1.5f, -7.0f), ivory));
+    objects.push_back(new Cube(glm::vec3(0.5f, -1.0f, -8.0f), glm::vec3(1.5f, 1.0f, -7.0f), traje));
+
+    //Casco
+    objects.push_back(new Cube(glm::vec3(0.5f, 1.0f, -8.0f), glm::vec3(0.7f, 2.0f, -7.0f), estructura));
+    objects.push_back(new Cube(glm::vec3(1.3f, 1.0f, -8.0f), glm::vec3(1.5f, 2.0f, -7.0f), estructura));
+    objects.push_back(new Cube(glm::vec3(0.5f, 1.8f, -8.0f), glm::vec3(1.5f, 2.0f, -7.0f), estructura));
+    objects.push_back(new Cube(glm::vec3(0.5f, 1.0f, -8.0f), glm::vec3(1.5f, 1.3f, -7.0f), estructura));
+    objects.push_back(new Cube(glm::vec3(0.7f, 1.3f, -8.0f), glm::vec3(1.3f, 1.8f, -8.0f), estructura));
+    objects.push_back(new Cube(glm::vec3(0.7f, 1.3f, -8.0f), glm::vec3(1.3f, 1.8f, -7.0f), mirror));
+
     //Noveno detras de octavo
     objects.push_back(new Cube(glm::vec3(-0.5f, -1.0f, -10.5f), glm::vec3(2.5f, 1.0f, -8.5f), redMat));
     //Lados del noveno
@@ -199,15 +244,52 @@ void setUp() {
     //Decimo detras de noveno entre llantas
     objects.push_back(new Cube(glm::vec3(-0.5f, -1.0f, -12.5f), glm::vec3(2.5f, 1.0f, -10.5f), redMat));
     //Lantas Traseras
-    objects.push_back(new Cube(glm::vec3(-2.5f, -1.0f, -12.5f), glm::vec3(-0.5f, 1.0f, -10.5f), negro));
-    objects.push_back(new Cube(glm::vec3(2.5f, -1.0f, -12.5f), glm::vec3(4.5f, 1.0f, -10.5f), negro));
+    objects.push_back(new Cube(glm::vec3(-2.5f, -1.0f, -12.5f), glm::vec3(-0.5f, 1.0f, -10.5f), estructura));
+    objects.push_back(new Cube(glm::vec3(2.5f, -1.0f, -12.5f), glm::vec3(4.5f, 1.0f, -10.5f), estructura));
     //Onceavo detras de decimo
     objects.push_back(new Cube(glm::vec3(-0.5f, -1.0f, -13.5f), glm::vec3(2.5f, 1.0f, -11.5f), redMat));
     //Soporte DRS encima de onceavo
-    objects.push_back(new Cube(glm::vec3(-0.0f, -1.0f, -13.5f), glm::vec3(0.5f, 1.5f, -13.0f), negro));
-    objects.push_back(new Cube(glm::vec3(1.5f, -1.0f, -13.5f), glm::vec3(2.0f, 1.5f, -13.0f), negro));
+    objects.push_back(new Cube(glm::vec3(-0.0f, -1.0f, -13.5f), glm::vec3(0.5f, 1.5f, -13.0f), estructura));
+    objects.push_back(new Cube(glm::vec3(1.5f, -1.0f, -13.5f), glm::vec3(2.0f, 1.5f, -13.0f), estructura));
     //DRS
     objects.push_back(new Cube(glm::vec3(-1.5f, 1.5f, -14.5f), glm::vec3(3.5f, 1.8f, -13.0f), redMat));
+
+    //Tubo izquierdo
+    objects.push_back(new Cube(glm::vec3(-8.5f, -1.0f, -4.5f), glm::vec3(-7.5f, 10.0f, -4.0f), metalMaterial));
+    //Tubo derecho
+    objects.push_back(new Cube(glm::vec3(8.5f, -1.0f, -4.5f), glm::vec3(9.5f, 10.0f, -4.0f), metalMaterial));
+
+    //Meta
+    objects.push_back(new Cube(glm::vec3(-8.5f, 7.0f, -4.5f), glm::vec3(9.5f, 10.0f, -4.0f), bandera));
+
+    //Bandera negro adelante
+    objects.push_back(new Cube(glm::vec3(-7.3f, 9.0f, -5.0f), glm::vec3(-6.3f, 10.0f, -3.5f), banderaNegra));
+    objects.push_back(new Cube(glm::vec3(-5.3f, 9.0f, -5.0f), glm::vec3(-4.3f, 10.0f, -3.5f), banderaNegra));
+    objects.push_back(new Cube(glm::vec3(-3.3f, 9.0f, -5.0f), glm::vec3(-2.3f, 10.0f, -3.5f), banderaNegra));
+    objects.push_back(new Cube(glm::vec3(-1.3f, 9.0f, -5.0f), glm::vec3(0.3f, 10.0f, -3.5f), banderaNegra));
+    objects.push_back(new Cube(glm::vec3(1.3f, 9.0f, -5.0f), glm::vec3(2.3f, 10.0f, -3.5f), banderaNegra));
+    objects.push_back(new Cube(glm::vec3(3.3f, 9.0f, -5.0f), glm::vec3(4.3f, 10.0f, -3.5f), banderaNegra));
+    objects.push_back(new Cube(glm::vec3(5.3f, 9.0f, -5.0f), glm::vec3(6.3f, 10.0f, -3.5f), banderaNegra));
+    objects.push_back(new Cube(glm::vec3(7.3f, 9.0f, -5.0f), glm::vec3(8.3f, 10.0f, -3.5f), banderaNegra));
+
+    objects.push_back(new Cube(glm::vec3(-7.3f, 7.0f, -5.0f), glm::vec3(-6.3f, 8.0f, -3.5f), banderaNegra));
+    objects.push_back(new Cube(glm::vec3(-5.3f, 7.0f, -5.0f), glm::vec3(-4.3f, 8.0f, -3.5f), banderaNegra));
+    objects.push_back(new Cube(glm::vec3(-3.3f, 7.0f, -5.0f), glm::vec3(-2.3f, 8.0f, -3.5f), banderaNegra));
+    objects.push_back(new Cube(glm::vec3(-1.3f, 7.0f, -5.0f), glm::vec3(0.3f, 8.0f, -3.5f), banderaNegra));
+    objects.push_back(new Cube(glm::vec3(1.3f, 7.0f, -5.0f), glm::vec3(2.3f, 8.0f, -3.5f), banderaNegra));
+    objects.push_back(new Cube(glm::vec3(3.3f, 7.0f, -5.0f), glm::vec3(4.3f, 8.0f, -3.5f), banderaNegra));
+    objects.push_back(new Cube(glm::vec3(5.3f, 7.0f, -5.0f), glm::vec3(6.3f, 8.0f, -3.5f), banderaNegra));
+    objects.push_back(new Cube(glm::vec3(7.3f, 7.0f, -5.0f), glm::vec3(8.3f, 8.0f, -3.5f), banderaNegra));
+
+    objects.push_back(new Cube(glm::vec3(-6.3f, 8.0f, -5.0f), glm::vec3(-5.3f, 9.0f, -3.5f), banderaNegra));
+    objects.push_back(new Cube(glm::vec3(-4.3f, 8.0f, -5.0f), glm::vec3(-3.3f, 9.0f, -3.5f), banderaNegra));
+    objects.push_back(new Cube(glm::vec3(-2.3f, 8.0f, -5.0f), glm::vec3(-1.3f, 9.0f, -3.5f), banderaNegra));
+    objects.push_back(new Cube(glm::vec3(0.3f, 8.0f, -5.0f), glm::vec3(1.3f, 9.0f, -3.5f), banderaNegra));
+    objects.push_back(new Cube(glm::vec3(2.3f, 8.0f, -5.0f), glm::vec3(3.3f, 9.0f, -3.5f), banderaNegra));
+    objects.push_back(new Cube(glm::vec3(4.3f, 8.0f, -5.0f), glm::vec3(5.3f, 9.0f, -3.5f), banderaNegra));
+    objects.push_back(new Cube(glm::vec3(6.3f, 8.0f, -5.0f), glm::vec3(7.3f, 9.0f, -3.5f), banderaNegra));
+
+
 }
 
 
@@ -327,7 +409,7 @@ int main(int argc, char* argv[]) {
         // Calculate and display FPS
         if (SDL_GetTicks() - currentTime >= 1000) {
             currentTime = SDL_GetTicks();
-            std::string title = "Hello World - FPS: " + std::to_string(frameCount);
+            std::string title = "Raytracer F1 - FPS: " + std::to_string(frameCount);
             SDL_SetWindowTitle(window, title.c_str());
             frameCount = 0;
         }
